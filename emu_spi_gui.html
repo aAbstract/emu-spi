@@ -68,7 +68,7 @@
         }
 
         #prompt_txt {
-            width: 100px;
+            width: 250px;
             margin-right: 16px;
             border-radius: 8px;
         }
@@ -112,7 +112,7 @@
             </div>
         </div>
         <div id="prompt_cont">
-            <input type="text" value="EmuSpi>" id="prompt_txt" readonly>
+            <input type="text" value="EmuSpi (OFFLINE)>" id="prompt_txt" readonly>
             <input type="text" id="inp_cmd_txt">
         </div>
     </div>
@@ -144,6 +144,17 @@
 
         window.onload = () => {
             logs_cont = document.querySelector('#logs_cont');
+            const input = document.querySelector('#inp_cmd_txt');
+
+            input.addEventListener('keyup', (event) => {
+                if (event.keyCode === 13) {
+                    event.preventDefault();
+                    exec_cmd(input.value);
+                    input.value = '';
+                }
+            });
+
+            setTimeout(() => pywebview.api.vspi_connect(''), 1000);
         };
 
         /**
@@ -166,7 +177,7 @@
         function add_log(source, level, msg) {
             /** @type {LogMsg} */
             const log_msg = {
-                datetime: new Date().toLocaleString(),
+                datetime: new Date().toLocaleString().split(' ')[1],
                 source,
                 level,
                 msg,
@@ -177,21 +188,59 @@
             const msg_cont_obj = document.createElement('div');
             msg_cont_obj.classList.add('log_msg');
             const date_span = document.createElement('span');
+            const source_span = document.createElement('span');
             const level_span = document.createElement('span');
             const msg_span = document.createElement('span');
 
             date_span.innerText = `[${log_msg.datetime}]`;
-            level_span.innerText = ` [${log_msg.level}] `;
+            source_span.innerText = ` [${log_msg.source}] `;
+            level_span.innerText = `[${log_msg.level}] `;
             level_span.style.color = log_level_color_map[log_msg.level];
             msg_span.innerText = log_msg.msg;
 
             msg_cont_obj.appendChild(date_span);
+            msg_cont_obj.appendChild(source_span);
             msg_cont_obj.appendChild(level_span);
             msg_cont_obj.appendChild(msg_span);
             logs_cont.appendChild(msg_cont_obj);
         }
 
-        setInterval(() => { add_log('', Object.keys(log_level_color_map)[Math.floor(Math.random() * 4)], 'This is Some Random Text Msg') }, 1000);
+        /**
+         * @param {string} new_addr
+         */
+        function change_vspi_addr(new_addr) {
+            const elem = document.querySelector('#prompt_txt');
+            elem.value = `EmuSpi (${new_addr})>`;
+        }
+
+        /**
+         * @param {string} cmd_str
+         */
+        function exec_cmd(cmd_str) {
+            add_log('UI.exec_cmd', 'DEBUG', `Executing: ${cmd_str}`);
+            const cmd_arr = cmd_str.split(' ');
+            const cmd = cmd_arr[0];
+            const cmd_map = {
+                'vspic': pywebview.api.vspi_connect,
+                'wjs': pywebview.api.soc_write_json,
+                'wjsr': pywebview.api.soc_write_json_retain,
+                'wdpw': pywebview.api.soc_write_device_packet_wght,
+                'wdpr': pywebview.api.soc_write_device_packet_err,
+                'exit': pywebview.api.exit,
+            };
+            if (cmd === 'help') {
+                add_log('UI.exec_cmd', 'INFO', `commands: ${Object.keys(cmd_map)}`);
+                return;
+            }
+            if (!(cmd in cmd_map)) {
+                add_log('UI.exec_cmd', 'ERROR', `Unknown command: ${cmd}`);
+                return;
+            }
+            const func = cmd_map[cmd];
+            func(cmd_str);
+        }
+
+        // setInterval(() => { add_log('', Object.keys(log_level_color_map)[Math.floor(Math.random() * 4)], 'This is Some Random Text Msg') }, 1000);
         // setInterval(() => { print('test_text') }, 1000);
     </script>
 </body>
