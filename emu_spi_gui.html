@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background-color: #111D2D;
+            color: #8BA2CC;
+            font-family: "Lucida Console", "Courier New", monospace;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #main_cont {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            width: 100%;
+            flex-grow: 1;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+
+        #logs_cont {
+            flex-grow: 1;
+            height: 0px;
+            margin-bottom: 16px;
+            background-color: #0B0E1F;
+            width: 90%;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 12px;
+            font-family: "Lucida Console", "Courier New", monospace;
+            font-weight: bold;
+            overflow-x: scroll;
+            overflow-y: scroll;
+        }
+
+        #prompt_cont {
+            height: fit-content;
+            width: 90%;
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        #prompt_cont input {
+            background-color: #0B0E1F;
+            font-weight: bold;
+            border: none;
+            color: #8BA2CC;
+            padding: 8px;
+            font-family: "Lucida Console", "Courier New", monospace;
+            font-size: 16px;
+        }
+
+        #prompt_cont input:focus {
+            outline: none;
+        }
+
+        #prompt_txt {
+            width: 100px;
+            margin-right: 16px;
+            border-radius: 8px;
+        }
+
+        #inp_cmd_txt {
+            flex-grow: 1;
+            border-radius: 8px;
+        }
+
+        .log_msg {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: flex-start;
+            white-space: pre;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+            background-color: #2D3A4B;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #8BA2CC;
+            border-radius: 8px;
+        }
+
+        ::-webkit-scrollbar-corner {
+            background-color: #2D3A4B;
+        }
+    </style>
+
+    <title>EmuSpi</title>
+</head>
+
+<body>
+    <div id="main_cont">
+        <div id="logs_cont">
+            <div class="log_msg">
+            </div>
+        </div>
+        <div id="prompt_cont">
+            <input type="text" value="EmuSpi>" id="prompt_txt" readonly>
+            <input type="text" id="inp_cmd_txt">
+        </div>
+    </div>
+
+    <script>
+        /**
+         * @typedef {'INFO' | 'DEBUG' | 'WARN' | 'ERROR'} LogLevel
+         */
+
+        /**
+         * @typedef {Object} LogMsg
+         * @property {string} datetime
+         * @property {string} source
+         * @property {LogLevel} level
+         * @property {string} msg
+         */
+
+        const log_level_color_map = {
+            'INFO': '#64DD17',
+            'DEBUG': '#FFD600',
+            'WARN': '#FFAB00',
+            'ERROR': '#DD2C00',
+        };
+
+        /** @type {Element} */
+        let logs_cont = null;
+        /** @type {LogMsg[]} */
+        let logs = [];
+
+        window.onload = () => {
+            logs_cont = document.querySelector('#logs_cont');
+        };
+
+        /**
+         * @param {string} msg
+         */
+        function print(msg) {
+            const msg_cont_obj = document.createElement('div');
+            const msg_obj = document.createElement('span');
+            msg_obj.innerText = msg;
+            msg_cont_obj.appendChild(msg_obj);
+            msg_cont_obj.classList.add('log_msg');
+            logs_cont.appendChild(msg_cont_obj);
+        }
+
+        /**
+         * @param {string} source
+         * @param {string} level
+         * @param {string} msg
+         */
+        function add_log(source, level, msg) {
+            /** @type {LogMsg} */
+            const log_msg = {
+                datetime: new Date().toLocaleString(),
+                source,
+                level,
+                msg,
+            };
+            logs.push(log_msg);
+
+            // render log
+            const msg_cont_obj = document.createElement('div');
+            msg_cont_obj.classList.add('log_msg');
+            const date_span = document.createElement('span');
+            const level_span = document.createElement('span');
+            const msg_span = document.createElement('span');
+
+            date_span.innerText = `[${log_msg.datetime}]`;
+            level_span.innerText = ` [${log_msg.level}] `;
+            level_span.style.color = log_level_color_map[log_msg.level];
+            msg_span.innerText = log_msg.msg;
+
+            msg_cont_obj.appendChild(date_span);
+            msg_cont_obj.appendChild(level_span);
+            msg_cont_obj.appendChild(msg_span);
+            logs_cont.appendChild(msg_cont_obj);
+        }
+
+        setInterval(() => { add_log('', Object.keys(log_level_color_map)[Math.floor(Math.random() * 4)], 'This is Some Random Text Msg') }, 1000);
+        // setInterval(() => { print('test_text') }, 1000);
+    </script>
+</body>
+
+</html>
