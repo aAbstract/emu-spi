@@ -18,7 +18,14 @@ python ./emu_spi.py
 This will open the GUI window. Click "Connect" to connect to the VSPI server.  
 The GUI allows sending commands and displays logging information.
 
-You can then send these commands:  
-- **wjs**: Send a JSON packet
-- **wjsr**: Send a JSON packet with retain flag
-- **exit**: Exit
+You can then send these commands:
+```js
+cmd_map = {
+    'vspic': pywebview.api.vspi_connect,
+    'wjs': pywebview.api.soc_write_json,
+    'wjsr': pywebview.api.soc_write_json_retain,
+    'wdpw': pywebview.api.soc_write_device_packet_wght,
+    'wdpr': pywebview.api.soc_write_device_packet_err,
+    'exit': pywebview.api.exit,
+};
+```
